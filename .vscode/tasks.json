@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Compilar",
+        "type": "shell",
+        "command": "gcc",
+        "args": [
+          "-o",
+          "labirinto",
+          "TP1V0.c",
+          "rules.c"  // Coloque aqui suas flags e bibliotecas específicas
+        ],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": ["$gcc"],
+        "detail": "Tarefa personalizada para compilar programa em C no WSL"
+      }
+    ]
+  }
+  

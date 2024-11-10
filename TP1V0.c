@@ -7,10 +7,7 @@
 
 int main() {
     // Declara a string de entrada com tamanho máximo de 10 caracteres
-    char Move[10] = "UP"; // Inicializa a string com "UP" para Debug
-
-    // Usa `gets()` para receber uma nova string de entrada do usuário (Perigoso, mas funcional para testes)
-    gets(Move);
+    char Move[10] = {'L','e','F','t'}; // Inicializa a string com "UP" para Debug
 
     // Variável para armazenar o próximo movimento
     int Next = 0;
