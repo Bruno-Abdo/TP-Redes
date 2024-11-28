@@ -2,43 +2,6 @@
 #include<string.h>
 #include"rules.h"
 
-#define MAX_ROWS 10  // Número máximo de linhas do arquivo
-#define MAX_COLS 10  // Número máximo de colunas por linha
-
-// Função que converte todos os caracteres de uma string para minúsculas
-void lowerCase(char *word) {
-    int length = strlen(word); // Calcula o comprimento da string
-
-    // Loop para percorrer cada caractere da string
-    for (int i = 0; i < length; i++) {
-        // Se o caractere estiver em maiúsculas (A-Z), converte para minúsculas (a-z)
-        if (word[i] < 97) {
-            word[i] = word[i] + 32; // 'A' (65) -> 'a' (97) = +32
-        }
-    }
-}
-
-// Função que retorna um inteiro baseado na direção recebida como string
-int movesTo(char *direction, int way) {
-    // Converte a string recebida para minúsculas
-    lowerCase(direction);
-
-    // Compara a direção recebida com as direções possíveis
-    if (strcmp(direction, "up") == 0) {   // Comparação correta é com "up"
-        way = 1;  // Retorna 1 se a direção for "up"
-    } else if (strcmp(direction, "right") == 0) { // Correção aqui também
-        way = 2;  // Retorna 2 se a direção for "right"
-    } else if (strcmp(direction, "down") == 0) { // Correção aqui também
-        way = 3;  // Retorna 3 se a direção for "down"
-    } else if (strcmp(direction, "left") == 0) { // Correção aqui também
-        way = 4;  // Retorna 4 se a direção for "left"
-    } else {
-        printf("Comando inválido\n"); // Mensagem de erro se o comando for inválido
-        way = 0; // Retorna 0 para comando inválido
-    }
-}
-
-
 void saveFile(int *m, int *n, int M[10][10]) {
     // Declaração das variáveis
     FILE *arq;  // Ponteiro para o arquivo que será lido
@@ -78,13 +41,71 @@ void saveFile(int *m, int *n, int M[10][10]) {
             j = 0;   // Reseta o índice de colunas
         }
         // Exibe o caractere lido na tela
-        printf("%c", c);
+        //printf("%c", c);
     }
     // Exibe o tamanho final da matriz
-    printf("m %i e n %i\n", *m, *n);
+    //printf("m %i e n %i\n", *m, *n);
 
     // Fecha o arquivo após a leitura
     fclose(arq);
 }
 
+void InOut(int *PosiAtual, int *Saida, int m, int n, int M[10][10]){
+ for(int i = 0; i<=m; i++){
+        for(int j = 0; j<=n; j++){
+            if(M[j][i] == 2){
+                PosiAtual[0] = i;
+                PosiAtual[1] = j;
+            } else if(M[j][i] == 3){
+                Saida[0] = i;
+                Saida[1] = j;
+            }
+        }
+    }
+    //printf("Sua posicao e %i, %i. A saida esta em %i, %i",PosiAtual[0],PosiAtual[1],Saida[0],Saida[1]);
+}
 
+void PossibleWays(int PCol, int PRow, int Moves[100],int M[10][10], int col, int row){
+
+    int k = 0;
+    for(int i = 0; i<100;i++){
+        Moves[i] = 0;
+    }
+    if(PRow> 0 && (M[PRow-1][PCol] != 0 )){
+        Moves[k] = 1;
+        k++;
+    }
+    if(PCol< col && (M[PRow][PCol+1] != 0 )){
+        Moves[k] = 2;
+        k++;
+    }
+    if(PRow< row && (M[PRow+1][PCol] != 0 )){
+        Moves[k] = 3;
+        k++;
+    }
+    if(PCol> 0 && (M[PRow][PCol-1] != 0)){
+        Moves[k] = 4;
+        k++;
+    }
+}
+
+void nextMove(char *Move, int *Movimentos,int *posic){
+    int Next = 0;
+    while(1){
+        if(Next == Movimentos[0] || Next == Movimentos[1] || Next == Movimentos[2] || Next == Movimentos[3]){
+            if(Next == 1){
+                posic[1]--;
+            }else if(Next == 2){
+                posic[0]++;
+            }else if(Next == 3){
+                posic[1]++;
+            }else if(Next == 4){
+                posic[0]--;
+            }
+            break;
+        }else{
+            printf("Movimento Invalido\n");
+            Next = 0;
+        }
+    }
+}
