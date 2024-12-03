@@ -102,6 +102,8 @@ int server_sockaddr_init(const char *proto, const char *portstr,
 
 void zeroVector(int *vector){
     for(int i = 0; i<100; i++){
-        vector[i] = 0;
+        if(vector[i]!='\0'){
+            vector[i] = 0;
+        } else break;
     }
 }

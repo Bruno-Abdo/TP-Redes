@@ -78,7 +78,6 @@ int checkCommand(char *command,int *action, int *direction){
     }
 }
 
-
 void showMap(int Col, int Row, int M[10][10]){
         for(int i =0; i<Col; i++){
             for(int j = 0; j<Row; j++){

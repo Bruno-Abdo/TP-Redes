@@ -91,12 +91,12 @@ void saveFile(int *m, int *n, int M[10][10], char **argv) {
             break;   // Sai do loop
         } 
         // Se o caractere não for tabulação ('\t' = ASCII 9) ou nova linha ('\n' = ASCII 10)
-        else if (c != 9 && c != 10) {
+        else if (c != 9 && c != 10 && c != 13){
             M[i][j] = c-48;  // Armazena o caractere na matriz
-            j++;          // Avança para a próxima coluna
+            j++;      // Avança para a próxima coluna
         } 
         // Se o caractere for uma nova linha ('\n')
-        else if (c == 10) {
+        else if (c == 10){
             *m = j;  // Atualiza o número de colunas da matriz
             i++;     // Avança para a próxima linha
             j = 0;   // Reseta o índice de colunas
@@ -107,8 +107,8 @@ void saveFile(int *m, int *n, int M[10][10], char **argv) {
 }
 
 void InOut(int *PosiAtual, int *Saida, int m, int n, int M[10][10]){
- for(int i = 0; i<=m; i++){
-        for(int j = 0; j<=n; j++){
+ for(int i = 0; i<m; i++){
+        for(int j = 0; j<n; j++){
             if(M[j][i] == 2){
                 PosiAtual[0] = i;
                 PosiAtual[1] = j;
@@ -122,23 +122,22 @@ void InOut(int *PosiAtual, int *Saida, int m, int n, int M[10][10]){
 }
 
 void PossibleWays(int PCol, int PRow, int Moves[100],int M[10][10], int col, int row){
-
     int k = 0;
-    for(int i = 0; i<100;i++){
-        Moves[i] = 0;
-    }
     if(PRow> 0 && (M[PRow-1][PCol] != 0 )){
         Moves[k] = 1;
         k++;
     }
+
     if(PCol< col && (M[PRow][PCol+1] != 0 )){
         Moves[k] = 2;
         k++;
     }
+
     if(PRow< row && (M[PRow+1][PCol] != 0 )){
         Moves[k] = 3;
         k++;
     }
+
     if(PCol> 0 && (M[PRow][PCol-1] != 0)){
         Moves[k] = 4;
         k++;
@@ -171,31 +170,50 @@ int main(int argc, char **argv){
     struct action Jogo;
     int Colunas = 0;
     int Linhas = 0;
-    int Jogador[2];//[0] Coluna - [1] Linha
-    int Saida[2];//[0] Coluna - [1] Linha
+    int Jogador[2];                                                                 //[0] Coluna - [1] Linha
+    int Saida[2];                                                                   //[0] Coluna - [1] Linha
 
-    saveFile(&Colunas, &Linhas, Jogo.board, argv);    
+    saveFile(&Colunas, &Linhas, Jogo.board, argv);                                  //Converte txt em matrix
 
     int csock;
     char caddrstr[BUFSZ];
 
-    csock = startConnection(argc, argv, caddrstr);
+    csock = startConnection(argc, argv, caddrstr);                                  //conecta ao cliente
     printf("Client connected\n");
     
     size_t count = 0;
-    count = recv(csock, &Jogo.type,sizeof(int), 0);
+    count = recv(csock, &Jogo.type,sizeof(int)+1, 0);                               //Recebe start do cliente
 
-    if(Jogo.type == 0){
-        InOut(Jogador,Saida, Colunas, Linhas,Jogo.board);
-        PossibleWays(Jogador[0],Jogador[1], Jogo.moves, Jogo.board,Colunas,Linhas);
-        count = send(csock,&Jogo.moves,sizeof(100)+1,0);
-        printf("Chegou aqui");
-        if (count != sizeof(100)+1){
-				logexit("send");
-			}
+    if(Jogo.type == 0){                                                             //Verifica se recebeu start (type 0)
+        printf("starting new game\n");
+        InOut(Jogador,Saida, Colunas, Linhas,Jogo.board);                           //Encontra posição do jogador e da saida
+        PossibleWays(Jogador[0],Jogador[1], Jogo.moves, Jogo.board,Colunas,Linhas); //Define os movimentos possíveis para o jogador
+
+        count = send(csock,Jogo.moves,sizeof(Jogo.moves)+1,0);                        //Envia movimentos possiveis ao cliente
+        if(count != sizeof(Jogo.moves)+1){
+			logexit("send");
+		}
+
+
+        while(1){
+            count = recv(csock,Jogo.moves,sizeof(Jogo.moves), 0);                    //Rebe movimento escolhido
+            printf("%li\n",count);
+        }
+        //nextMove(Saida,Jogo.moves,Jogador)
     }
 
-    char buf[BUFSZ];
+
+
+
+
+
+
+
+
+
+
+
+    /*char buf[BUFSZ];
     while (1)    {
         memset(buf, 0, BUFSZ);
         count = recv(csock, buf, BUFSZ - 1, 0);
@@ -208,7 +226,7 @@ int main(int argc, char **argv){
 		if (count != strlen(buf) + 1){
 			logexit("send");
 		}
-    }
+    }*/
 
     close(csock);
 

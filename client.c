@@ -55,6 +55,7 @@ void lowerCase(char *word) {
 int checkCommand(int *action, int *direction){
 	char command[6] =" ";
 	zeroVector(action);
+	zeroVector(direction);
 	scanf("%s", command);
 	lowerCase(command);
 	if(!strcmp(command, "start")){	// Comparação correta é com "start"
@@ -70,7 +71,7 @@ int checkCommand(int *action, int *direction){
         return 1;  // Retorna 2 se a direção for "right"
     } else if (!strcmp(command, "down")) { // Correção aqui também
         *action = 1;
-        *direction = 3;
+        direction[0] = 3;
         return 1; // Retorna 3 se a direção for "down"
     } else if(!strcmp(command, "left")){ // Correção aqui também
         *action = 1;
@@ -84,6 +85,7 @@ int checkCommand(int *action, int *direction){
 
 void ShowWays(int moves[100]){
     int i = 0;
+
     printf("Possible moves: ");
     while(1){
        if(moves[i] == 1){
@@ -106,12 +108,12 @@ void ShowWays(int moves[100]){
 }
 
 int main(int argc, char **argv){
-		int s; 								// Inicialização do Socket
-		s = startConnection(argc, argv, s); // Faz socket(), bind(), listen() e accept()
+		int s; 													// Inicialização do Socket
+		s = startConnection(argc, argv, s); 					// Faz socket(), bind(), listen() e accept()
 
-		struct action Jogo; //Declara estrutura
+		struct action Jogo; 									//Declara estrutura
 
-		while(checkCommand(&Jogo.type,Jogo.moves)){ //Enquando o retorno do teclado não for type 0 repita
+		while(checkCommand(&Jogo.type,Jogo.moves)){ 			//Enquando o retorno do teclado não for type 0 repita
 			printf("error: start the game first\n");
 		}
 
@@ -119,14 +121,24 @@ int main(int argc, char **argv){
 		unsigned total = 0;
 		size_t count = 0;
 
-		count = send(s, &Jogo.type, sizeof(int) + 1, 0);
-		if (count != sizeof(int) + 1){
+		count = send(s, &Jogo.type, sizeof(int), 0); 			//Envia comando star ao servidor
+		if(count != sizeof(int)){
 			logexit("send");
 		}		
 
-		recv(s, &Jogo.moves,sizeof(100), 0);
+		recv(s, Jogo.moves,sizeof(Jogo.moves)+1, 0);				//Recebe os movimentos possíveis do jogador
 
-		ShowWays(Jogo.moves);
+		ShowWays(Jogo.moves);									//Mostra na tela as opções
+
+		checkCommand(&Jogo.type,Jogo.moves);					//Lê comando no teclado
+
+		count = send(s, Jogo.moves, sizeof(Jogo.moves), 0);		//Envia o movimento escolhido
+		if(count != sizeof(100)){  
+			logexit("send");
+		}
+		
+		
+
 
 
 
