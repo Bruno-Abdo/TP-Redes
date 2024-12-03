@@ -1,5 +1,3 @@
-#include <winsock2.h>   // Biblioteca para o uso de sockets no Windows
-#include <ws2tcpip.h>   // Biblioteca para funções adicionais de sockets
 #include <stdio.h>      // Biblioteca para entrada e saída padrão
 #include <stdlib.h>     // Biblioteca para funções utilitárias como malloc, free
 #include <string.h>     // Biblioteca para manipulação de strings
