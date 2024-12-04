@@ -56,6 +56,7 @@ int startConnection(int argc, char **argv, char *straddr)
     {
         logexit("accept");
     }
+    printf("Client connected\n");
 
     char traddr[BUFSZ];
     addrtostr(caddr, straddr, BUFSZ);
@@ -144,7 +145,7 @@ void PossibleWays(int PCol, int PRow, int Moves[100],int M[10][10], int col, int
     }
 }
 
-void nextMove(int *Movimentos,int *posic){ 
+int nextMove(int *Movimentos,int *posic, int *saida, int *tipo){ 
         if(Movimentos[0] == 1){
             posic[1]--;
         }else if(Movimentos[0] == 2){
@@ -154,6 +155,46 @@ void nextMove(int *Movimentos,int *posic){
         }else if(Movimentos[0] == 4){
             posic[0]--;
         }
+
+        if(posic[0] == saida[0] && posic[1] == saida[1]){
+            *tipo = 5;
+        }
+}
+
+void reMap(int Original[10][10],int Copy[10][10], int Col, int Lin, int Player[2]){
+    for(int i = 0; i<10; i++){
+        for(int j = 0; j<10;j++){
+            if(i >= Lin || j >= Col){
+                Copy[i][j] = -1;
+            }else if(j == Player[0] && i == Player[1]){
+                Copy[i][j] = 5;
+                if(i>0){
+                    Copy[i-1][j] = Original[i-1][j];
+                }
+                if(i < Lin-1){
+                    Copy[i+1][j] = Original[i+1][j];
+                }
+                if(j> 0){
+                    Copy[i][j-1] = Original[i][j-1];
+                }
+                if(j< Col-1){
+                    Copy[i][j+1] = Original[i][j+1];
+                }
+                if(i> 0 && j>0){
+                    Copy[i-1][j-1] = Original[i-1][j-1];
+                }
+                if(i < Lin-1 && j < Col -1){
+                    Copy[i+1][j+1] = Original[i+1][j+1];
+                }
+                if(i < Lin-1 && j> 0){
+                    Copy[i+1][j-1] = Original[i+1][j-1];
+                }
+                if(i>0 && j< Col-1){
+                    Copy[i-1][j+1] = Original[i-1][j+1];
+                }      
+            }
+        }
+    }
 }
 
 int main(int argc, char **argv){
@@ -161,78 +202,88 @@ int main(int argc, char **argv){
     struct action Jogo;
     int Colunas = 0;
     int Linhas = 0;
-    int Jogador[2];                                                                 //[0] Coluna - [1] Linha
-    int Saida[2];                                                                   //[0] Coluna - [1] Linha
-
-    Jogo.moves[0] = 15;
-    Jogo.type = 333;
-
-    saveFile(&Colunas, &Linhas, Jogo.board, argv);                                  //Converte txt em matrix  
-    
+    int Jogador[2];//[0] Coluna - [1] Linha
+    int Saida[2];//[0] Coluna - [1] Linha
+    int Maze[10][10];
+    int MapedMaze[10][10];
     int csock;
     char caddrstr[BUFSZ];
-
-    csock = startConnection(argc, argv, caddrstr);                                  //conecta ao cliente
-    printf("Client connected\n");
-  int coisa = 10;  
     size_t count = 0;
-    count = recv(csock, &coisa,sizeof(coisa), 0);                                 //Recebe start do cliente
+    int leave = 0;
 
-    
-    Jogo.type == 15;
-    
-    count = send(csock,&Jogo,sizeof(Jogo),0);                        //Envia movimentos possiveis ao cliente
+    saveFile(&Colunas, &Linhas, Maze, argv);//Converte txt em matrix  
+
+    csock = startConnection(argc, argv, caddrstr);//Conecta ao cliente
+    count = recv(csock,&Jogo,sizeof(Jogo),0); //Recebe Mensagens
     if(count != sizeof(Jogo)){
-        logexit("send");
+        logexit("recv");
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    if(Jogo.type == 0){                                                             //Verifica se recebeu start (type 0)
-        printf("starting new game\n");
-        InOut(Jogador,Saida, Colunas, Linhas,Jogo.board);                           //Encontra posição do jogador e da saida
-        Jogo.type = 1;
-        while(1){            
-            PossibleWays(Jogador[0],Jogador[1], Jogo.moves, Jogo.board,Colunas,Linhas); //Define os movimentos possíveis para o jogador
-            count = send(csock,Jogo.moves,sizeof(Jogo.moves),0);                        //Envia movimentos possiveis ao cliente
-                if(count != sizeof(Jogo.moves)){
-              logexit("send");
-            }
-
-
-            if(Jogo.type == 1){
-                count = recv(csock,Jogo.moves,sizeof(Jogo.moves), 0);                    //Rebe movimento escolhido
-                nextMove(Jogo.moves,Jogador);
-            }           
-
+    for(int i = 0; i<10; i++){
+        for(int j = 0; j<10; j++){
+            MapedMaze[i][j] = 4;
         }
     }
 
+    if(Jogo.type == 0){
+        leave = 1;
+        InOut(Jogador,Saida, Colunas, Linhas,Maze);//Encontra posição do jogador e da saida
+        PossibleWays(Jogador[0],Jogador[1], Jogo.moves,Maze,Colunas,Linhas); //Define os movimentos possíveis para o jogador
+        reMap(Maze,MapedMaze,Colunas,Linhas,Jogador);
+        Jogo.type = 4;
+        count = send(csock,&Jogo,sizeof(Jogo),0);                        //Envia movimentos possiveis ao cliente
+        if(count != sizeof(Jogo)){
+            logexit("send");
+        }
+        printf("starting new game\n");
+    }
 
+
+    while(leave){
+        count = recv(csock,&Jogo,sizeof(Jogo),0); //Recebe Mensagens
+        if(count != sizeof(Jogo)){
+            logexit("recv");
+        }
+        if(Jogo.type == 1){
+            nextMove(Jogo.moves,Jogador,Saida,&Jogo.type);
+            reMap(Maze,MapedMaze,Colunas,Linhas,Jogador);
+            PossibleWays(Jogador[0],Jogador[1], Jogo.moves,Maze,Colunas,Linhas);
+            if(Jogo.type == 1){
+                Jogo.type = 4;
+                count = send(csock, &Jogo,sizeof(Jogo),0);//Envia
+                if(count != sizeof(Jogo)){
+                    logexit("send");
+                }
+            }
+        }
+
+        if(Jogo.type == 2){
+           for(int i = 0; i<10; i++){
+                for(int j = 0; j<10; j++){
+                    Jogo.board[i][j] = MapedMaze[i][j];
+                }
+            }
+            Jogo.type = 4;
+            count = send(csock, &Jogo,sizeof(Jogo),0);//Envia
+            if(count != sizeof(Jogo)){
+                logexit("send");
+            }
+        }
+
+        if(Jogo.type == 5){
+            for(int i = 0; i<10; i++){
+                for(int j = 0; j<10; j++){
+                    Jogo.board[i][j] = Maze[i][j];
+                }
+            }
+            count = send(csock, &Jogo,sizeof(Jogo),0);//Envia
+            if(count != sizeof(Jogo)){
+                logexit("send");
+            }            
+        }
+
+
+    }
 
 
 

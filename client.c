@@ -54,14 +54,16 @@ void lowerCase(char *word) {
 
 int checkCommand(int *action, int *direction){
 	char command[6] =" ";
-	zeroVector(action);
 	zeroVector(direction);
 	scanf("%s", command);
 	lowerCase(command);
 	if(!strcmp(command, "start")){	// Comparação correta é com "start"
 		*action = 0; // Retorna 0
 		return 0;
-	}else if(!strcmp(command, "up")){   // Comparação correta é com "up"
+	}else if (!strcmp(command, "map")) { // Correção aqui também
+        *action = 2;  // Retorna 2 se a direção for "right"
+        return 2;
+    }	else if(!strcmp(command, "up")){   // Comparação correta é com "up"
         *action = 1;
         *direction = 1;
         return 1;  // Retorna 1 se a direção for "up"
@@ -71,7 +73,7 @@ int checkCommand(int *action, int *direction){
         return 1;  // Retorna 2 se a direção for "right"
     } else if (!strcmp(command, "down")) { // Correção aqui também
         *action = 1;
-        direction[0] = 3;
+        *direction = 3;
         return 1; // Retorna 3 se a direção for "down"
     } else if(!strcmp(command, "left")){ // Correção aqui também
         *action = 1;
@@ -107,76 +109,86 @@ void ShowWays(int *moves){
     }
 }
 
-int main(int argc, char **argv){
-		int s; 													// Inicialização do Socket
-		s = startConnection(argc, argv, s); 					// Faz socket(), bind(), listen() e accept()
-
-		struct action Jogo; 									//Declara estrutura
-
-		while(checkCommand(&Jogo.type,Jogo.moves)){ 			//Enquando o retorno do teclado não for type 0 repita
-			printf("error: start the game first\n");
+void showMap(int Map[10][10]){
+	for(int i = 0; i<10;i++){	
+		for (int j = 0; j < 10; j++){
+			if(Map[i][j] == -1)							{
+				break;
+			}else if(Map[i][j] == 0){
+				printf("#\t");
+			}else if(Map[i][j] == 1){
+				printf("_\t");
+			}else if(Map[i][j] == 2){
+				printf(">\t");
+			}else if(Map[i][j] == 3){
+				printf("X\t");
+			}else if(Map[i][j] == 4){
+				printf("?\t");
+			}else if(Map[i][j] == 5){
+				printf("+\t");
+			}
 		}
+		printf("\n");
+	}
 
+	printf("\n");
+
+}
+
+int main(int argc, char **argv){
+		int s;// Inicialização do Socket
+		struct action Jogo;//Declara estrutura
 		char buf[BUFSZ];
 		unsigned total = 0;
 		size_t count = 0;
+		int buffer = 0;
+				
+		s = startConnection(argc, argv, s);// Faz socket(), bind(), listen() e accept()
 
-		count = send(s, &Jogo.type, sizeof(int), 0); 			//Envia comando star ao servidor
-		if(count != sizeof(int)){
+		while(checkCommand(&Jogo.type,Jogo.moves)){//Enquando o retorno do teclado não for type 0 repita
+			printf("error: start the game first\n");
+		}
+
+		count = send(s, &Jogo, sizeof(Jogo), 0);//Envia comando star ao servidor
+		if(count != sizeof(Jogo)){
 			logexit("send");
 		}	
 
-		int movecpy[4];	
+		recv(s,&Jogo,sizeof(Jogo), 0);//Recebe os movimentos possíveis do jogador
 
-		zeroVector(movecpy);
-
-		recv(s,&Jogo,sizeof(Jogo), 0);				//Recebe os movimentos possíveis do jogador
-
-		printf("Type: %i\nMove: %i\n",Jogo.type,Jogo.moves[0]);
-
-
-
-
-
-
-		ShowWays(movecpy);									//Mostra na tela as opções
-
-		int n = 0;
+		ShowWays(Jogo.moves);//Mostra na tela as opções
 		
 		while(1){
-			checkCommand(&Jogo.type,Jogo.moves);			//Lê comando no teclado
-			if(Jogo.moves[0] == movecpy[0] || Jogo.moves[0] == movecpy[1] || Jogo.moves[2] == movecpy[3] ||Jogo.moves[0] == movecpy[4]){
-				break;
-			}else printf("error: you cannot go this way\n");
+				checkCommand(&Jogo.type,&buffer);//Lê comando no teclado
+				if(Jogo.type ==1){
+					if(Jogo.moves[0] == buffer || Jogo.moves[1] == buffer|| Jogo.moves[2] == buffer||Jogo.moves[3]  == buffer){
+						zeroVector(Jogo.moves);
+						Jogo.moves[0] = buffer;
+						count = send(s, &Jogo, sizeof(Jogo), 0);		//Envia o movimento escolhido
+						if(count != sizeof(Jogo)){  
+							logexit("send");
+						}
+						recv(s,&Jogo,sizeof(Jogo), 0);//Recebe os movimentos possíveis do jogador
+						ShowWays(Jogo.moves);//Mostra na tela as opções
+					}else printf("error: you cannot go this way\n");
+				}
+				if (Jogo.type == 2){
+					count = send(s, &Jogo, sizeof(Jogo), 0); // Envia o movimento escolhido
+					if (count != sizeof(Jogo)){
+						logexit("send");
+					}
+
+					recv(s, &Jogo, sizeof(Jogo), 0); // Recebe os movimentos possíveis do jogador
+					showMap(Jogo.board);
+				}
+				if (Jogo.type == 5){
+					printf("You escaped!\n");
+					showMap(Jogo.board);
+					printf("\n");
+				}
+
+
 		}
-
-		count = send(s, Jogo.moves, sizeof(Jogo.moves), 0);		//Envia o movimento escolhido
-		if(count != sizeof(Jogo.moves)){  
-			logexit("send");
-		}
-		
-		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		/*memset(buf, 0, BUFSZ);
 		fgets(buf, BUFSZ - 1, stdin);
