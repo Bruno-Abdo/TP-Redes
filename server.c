@@ -144,25 +144,16 @@ void PossibleWays(int PCol, int PRow, int Moves[100],int M[10][10], int col, int
     }
 }
 
-void nextMove(char *Move, int *Movimentos,int *posic){
-    int Next = 0;
-    while(1){
-        if(Next == Movimentos[0] || Next == Movimentos[1] || Next == Movimentos[2] || Next == Movimentos[3]){
-            if(Next == 1){
-                posic[1]--;
-            }else if(Next == 2){
-                posic[0]++;
-            }else if(Next == 3){
-                posic[1]++;
-            }else if(Next == 4){
-                posic[0]--;
-            }
-            break;
-        }else{
-            printf("Movimento Invalido\n");
-            Next = 0;
+void nextMove(int *Movimentos,int *posic){ 
+        if(Movimentos[0] == 1){
+            posic[1]--;
+        }else if(Movimentos[0] == 2){
+            posic[0]++;
+        }else if(Movimentos[0] == 3){
+            posic[1]++;
+        }else if(Movimentos[0] == 4){
+            posic[0]--;
         }
-    }
 }
 
 int main(int argc, char **argv){
@@ -173,33 +164,72 @@ int main(int argc, char **argv){
     int Jogador[2];                                                                 //[0] Coluna - [1] Linha
     int Saida[2];                                                                   //[0] Coluna - [1] Linha
 
-    saveFile(&Colunas, &Linhas, Jogo.board, argv);                                  //Converte txt em matrix
+    Jogo.moves[0] = 15;
+    Jogo.type = 333;
 
+    saveFile(&Colunas, &Linhas, Jogo.board, argv);                                  //Converte txt em matrix  
+    
     int csock;
     char caddrstr[BUFSZ];
 
     csock = startConnection(argc, argv, caddrstr);                                  //conecta ao cliente
     printf("Client connected\n");
-    
+  int coisa = 10;  
     size_t count = 0;
-    count = recv(csock, &Jogo.type,sizeof(int)+1, 0);                               //Recebe start do cliente
+    count = recv(csock, &coisa,sizeof(coisa), 0);                                 //Recebe start do cliente
+
+    
+    Jogo.type == 15;
+    
+    count = send(csock,&Jogo,sizeof(Jogo),0);                        //Envia movimentos possiveis ao cliente
+    if(count != sizeof(Jogo)){
+        logexit("send");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     if(Jogo.type == 0){                                                             //Verifica se recebeu start (type 0)
         printf("starting new game\n");
         InOut(Jogador,Saida, Colunas, Linhas,Jogo.board);                           //Encontra posição do jogador e da saida
-        PossibleWays(Jogador[0],Jogador[1], Jogo.moves, Jogo.board,Colunas,Linhas); //Define os movimentos possíveis para o jogador
+        Jogo.type = 1;
+        while(1){            
+            PossibleWays(Jogador[0],Jogador[1], Jogo.moves, Jogo.board,Colunas,Linhas); //Define os movimentos possíveis para o jogador
+            count = send(csock,Jogo.moves,sizeof(Jogo.moves),0);                        //Envia movimentos possiveis ao cliente
+                if(count != sizeof(Jogo.moves)){
+              logexit("send");
+            }
 
-        count = send(csock,Jogo.moves,sizeof(Jogo.moves)+1,0);                        //Envia movimentos possiveis ao cliente
-        if(count != sizeof(Jogo.moves)+1){
-			logexit("send");
-		}
 
+            if(Jogo.type == 1){
+                count = recv(csock,Jogo.moves,sizeof(Jogo.moves), 0);                    //Rebe movimento escolhido
+                nextMove(Jogo.moves,Jogador);
+            }           
 
-        while(1){
-            count = recv(csock,Jogo.moves,sizeof(Jogo.moves), 0);                    //Rebe movimento escolhido
-            printf("%li\n",count);
         }
-        //nextMove(Saida,Jogo.moves,Jogador)
     }
 
 

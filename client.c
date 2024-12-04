@@ -83,7 +83,7 @@ int checkCommand(int *action, int *direction){
     }
 }
 
-void ShowWays(int moves[100]){
+void ShowWays(int *moves){
     int i = 0;
 
     printf("Possible moves: ");
@@ -124,16 +124,34 @@ int main(int argc, char **argv){
 		count = send(s, &Jogo.type, sizeof(int), 0); 			//Envia comando star ao servidor
 		if(count != sizeof(int)){
 			logexit("send");
-		}		
+		}	
 
-		recv(s, Jogo.moves,sizeof(Jogo.moves)+1, 0);				//Recebe os movimentos possíveis do jogador
+		int movecpy[4];	
 
-		ShowWays(Jogo.moves);									//Mostra na tela as opções
+		zeroVector(movecpy);
 
-		checkCommand(&Jogo.type,Jogo.moves);					//Lê comando no teclado
+		recv(s,&Jogo,sizeof(Jogo), 0);				//Recebe os movimentos possíveis do jogador
+
+		printf("Type: %i\nMove: %i\n",Jogo.type,Jogo.moves[0]);
+
+
+
+
+
+
+		ShowWays(movecpy);									//Mostra na tela as opções
+
+		int n = 0;
+		
+		while(1){
+			checkCommand(&Jogo.type,Jogo.moves);			//Lê comando no teclado
+			if(Jogo.moves[0] == movecpy[0] || Jogo.moves[0] == movecpy[1] || Jogo.moves[2] == movecpy[3] ||Jogo.moves[0] == movecpy[4]){
+				break;
+			}else printf("error: you cannot go this way\n");
+		}
 
 		count = send(s, Jogo.moves, sizeof(Jogo.moves), 0);		//Envia o movimento escolhido
-		if(count != sizeof(100)){  
+		if(count != sizeof(Jogo.moves)){  
 			logexit("send");
 		}
 		
