@@ -98,12 +98,3 @@ int server_sockaddr_init(const char *proto, const char *portstr,
         return -1;
     }
 }
-
-
-void zeroVector(int *vector){
-    for(int i = 0; i<100; i++){
-        if(vector[i]!='\0'){
-            vector[i] = 0;
-        } else break;
-    }
-}

@@ -219,6 +219,8 @@ int main(int argc, char **argv){
         logexit("recv");
     }
 
+    while(1){
+
     for(int i = 0; i<10; i++){
         for(int j = 0; j<10; j++){
             MapedMaze[i][j] = 4;
@@ -270,46 +272,34 @@ int main(int argc, char **argv){
             }
         }
 
-        if(Jogo.type == 5){
+        if(Jogo.type == 5){ //Winning
             for(int i = 0; i<10; i++){
                 for(int j = 0; j<10; j++){
                     Jogo.board[i][j] = Maze[i][j];
                 }
             }
+
             count = send(csock, &Jogo,sizeof(Jogo),0);//Envia
             if(count != sizeof(Jogo)){
                 logexit("send");
             }            
         }
-
+        if(Jogo.type == 6){
+            //printf("client disconnected\n");
+            Jogo.type = 0;
+            break;
+        }
+        if(Jogo.type == 7){
+            printf("client disconnected\n");
+            close(csock);
+            exit(EXIT_SUCCESS);
+            break;
+        }
 
     }
 
-
-
-
-
-
-
-
-
-
-    /*char buf[BUFSZ];
-    while (1)    {
-        memset(buf, 0, BUFSZ);
-        count = recv(csock, buf, BUFSZ - 1, 0);
-        puts(buf);
-
-        memset(buf, 0, BUFSZ);
-		printf("mensagem> ");
-		fgets(buf, BUFSZ - 1, stdin);
-		count = send(csock, buf, strlen(buf) + 1, 0);
-		if (count != strlen(buf) + 1){
-			logexit("send");
-		}
-    }*/
-
-    close(csock);
+    }
+    
 
     exit(EXIT_SUCCESS);
 }

@@ -1,27 +1,14 @@
-# Definir o compilador e flags
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
+CFLAGS = -Wall -g
+BIN_DIR = bin
 
-# Nome do arquivo executável
-TARGET = Labirinto
+all: bin/client bin/server
 
-# Arquivos objeto
-OBJ = TP1V0.o rules.o
+bin/client: client.c common.c
+	$(CC) $(CFLAGS) -o $@ $^
 
-# Regra para compilar o executável
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
+bin/server: server.c common.c
+	$(CC) $(CFLAGS) -o $@ $^
 
-# Regras para compilar arquivos .c em .o
-TP1V0.o: TP1V0.c rules.h
-	$(CC) $(CFLAGS) -c TP1V0.c
-
-rules.o: rules.c rules.h
-	$(CC) $(CFLAGS) -c rules.c
-
-# Regra para limpar arquivos compilados
 clean:
-	rm -f $(OBJ) $(TARGET)
-
-# Regra padrão para compilar e limpar ao mesmo tempo
-all: clean $(TARGET)
+	rm -rf bin
